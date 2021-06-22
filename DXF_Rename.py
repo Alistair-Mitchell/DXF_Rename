@@ -21,6 +21,7 @@ class App(QDialog):
         
         self.open_fileName_dialog("DXF Files (*.DXF)") #File dialog for .txt and .bdf
         self.populate() #Iterate over all the sets to extract valuesXX
+        self.rewrite()
         
         print("OOF")
         sys.exit() 
@@ -45,8 +46,7 @@ class App(QDialog):
 
     def populate(self,file_spec=""):
         textline = GrowingList()
-        textcontents = GrowingList()
-        self.replacement =str(input("What characters should i be looking for to replace?: "))
+        self.textcontents = GrowingList()
         for index,tempfile in enumerate(self.fileName):
             with open(tempfile,"r",encoding="utf8") as myfile: #Read into memory the specified file (.bdf/.txt)
                 for num, line in enumerate(myfile, 1): #View the file line by line
@@ -60,17 +60,30 @@ class App(QDialog):
                             textline[index]=0
                     try:
                         if num == textline[index]:
-                            print(line)
-                            if self.replacement in line:                             
-                                textcontents[index] = line
+                            print("CURRENT TEXT IS: "+line.rstrip("\n"))
+                            self.textcontents[index] = line.rstrip("\n")
                     except:
-                        textcontents[index] = 0
-        print(textline)
-        print(textcontents)
+                        self.textcontents[index] = 0
+        # print(self.textcontents)
 
     def query(self):
         self.replacement =str(input("What characters should i be looking for to replace?: "))
-
+    def rewrite(self):
+        self.prefix =str(input("What is the Prefix? (eg '52.' if you wanted 52.01, 52.02 etc): "))
+        self.suffix =str(input("What is the Suffix? (eg '-45deg' if you wanted that on the end of everything): "))
+        self.start =int(input("Start number?: "))
+        self.stop =int(input("Stop number?: "))+1
+        
+        self.replacement = self.textcontents[0]    
+        for index in range(self.start,self.stop):
+            number = str(index).zfill(2)
+            newtext= self.prefix+number+self.suffix
+            name = newtext+".dxf"
+            with open(self.fileName[0], 'r') as file :
+                filedata = file.read()
+            filedata = re.sub(self.replacement, str(newtext), filedata)
+            with open(name, 'w') as file:
+                file.write(filedata)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
