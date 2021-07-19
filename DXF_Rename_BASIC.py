@@ -24,7 +24,8 @@ class App(QDialog):
         self.rewrite()
         
         print("OOF")
-        sys.exit() 
+        self.restart()
+        # sys.exit() 
 
     def get_download_path(self): #Function to get the download path in windows
         if os.name == 'nt':
@@ -40,7 +41,7 @@ class App(QDialog):
     def open_fileName_dialog(self,type): #Function to display file dialog from PyQt
         location = self.get_download_path() #Use earlier download path as start point 
         options = QFileDialog.Options()
-        self.fileName, _ = QFileDialog.getOpenFileNames(self,"IForge GCode uploader", location,type, options=options) #opens a single file dialog box to accept file of specified type
+        self.fileName, _ = QFileDialog.getOpenFileNames(self,"IForge GCode uploader","",type, options=options) #opens a single file dialog box to accept file of specified type
         print(self.fileName)
         return    
 
@@ -69,7 +70,11 @@ class App(QDialog):
     def query(self):
         self.replacement =str(input("What characters should i be looking for to replace?: "))
     def rewrite(self):
+        self.filepreprefix = str(input("What should i put before the numbers in the file name?: "))
+        if self.filepreprefix == "EXIT":
+            sys.exit()
         self.prefix =str(input("What is the Prefix? (eg '52.' if you wanted 52.01, 52.02 etc): "))
+        
         self.suffix =str(input("What is the Suffix? (eg '-45deg' if you wanted that on the end of everything): "))
         self.start =int(input("Start number?: "))
         self.stop =int(input("Stop number?: "))+1
@@ -78,13 +83,14 @@ class App(QDialog):
         for index in range(self.start,self.stop):
             number = str(index).zfill(2)
             newtext= self.prefix+number+self.suffix
-            name = newtext+".dxf"
+            name = self.filepreprefix + newtext+".dxf"
             with open(self.fileName[0], 'r') as file :
                 filedata = file.read()
             filedata = re.sub(self.replacement, str(newtext), filedata)
             with open(name, 'w') as file:
                 file.write(filedata)
-
+    def restart(self):
+        self.initUI()
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
